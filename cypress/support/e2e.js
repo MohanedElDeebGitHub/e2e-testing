@@ -13,11 +13,4 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
-// Import commands.js using ES2015 syntax:
 import './commands'
-
-// Small, consistent defaults for this project
-Cypress.Commands.overwrite("type", (originalFn, subject, text, options) => {
-  const merged = { delay: 0, ...options };
-  return originalFn(subject, text, merged);
-});

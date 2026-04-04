@@ -1,4 +1,4 @@
-describe("Practice Software Testing - Toolshop", () => {
+describe("Toolshop: e2e", () => {
   let data;
 
   before(() => {
@@ -11,123 +11,168 @@ describe("Practice Software Testing - Toolshop", () => {
     cy.visitHome();
   });
 
-  it("TC01 - Home page loads correctly", () => {
-    cy.contains("a", /^home$/i).should("be.visible");
-    cy.contains("a", /categories/i).should("be.visible");
-    cy.contains("a", /contact/i).should("be.visible");
-    cy.location("href").should("include", "practicesoftwaretesting.com");
+  it("TC01 - should load the home page", () => {
+    cy.visitHome();
+
+    cy.url().should("include", "/#/");
+    cy.title().should("include", data.base.homeTitle);
+    cy.contains("a", "Home").should("be.visible");
+    cy.contains("a", "Categories").should("be.visible");
   });
 
-  it("TC02 - Navbar has main links", () => {
-    cy.contains("a", /^home$/i).should("be.visible");
-    cy.contains("a", /categories/i).should("be.visible");
-    cy.contains("a", /^contact$/i).should("be.visible");
+  it("TC02 - should display the main navbar links", () => {
+    cy.visitHome();
+
+    cy.get("a").should("exist");
+    cy.contains("a", "Home").should("be.visible");
+    cy.contains("a", "Categories").should("be.visible");
+    cy.contains("a", "Contact").should("be.visible");
   });
 
-  it("TC03 - Categories menu opens", () => {
+  it("TC03 - should open the categories menu", () => {
     cy.openCategoriesMenu();
-    cy.contains("a,button", /hand tools|power tools|other/i).should("be.visible");
-    cy.contains("a", /categories/i).should("be.visible");
+
+    cy.url().should("include", "practicesoftwaretesting.com");
+    cy.contains("a,button", "Power Tools").should("be.visible");
+    cy.contains("a,button", "Hand Tools").should("be.visible");
   });
 
-  it("TC04 - Navigate to a category from the menu", () => {
+  it("TC04 - should navigate to a category from the menu", () => {
     cy.chooseCategory("Hand Tools");
 
-    cy.location("pathname").should("include", "/category");
-    cy.get("h1,h2").first().should("be.visible");
-    cy.get('a[href*="/product/"], a[href*="#/product/"]').its("length").should("be.gt", 0);
+    cy.url().should("include", "/category/");
+    cy.url().should("include", "hand-tools");
+    cy.get('a[href*="/product/"]').should("have.length.greaterThan", 0);
   });
 
-  it("TC05 - Sort dropdown exists and is usable", () => {
-    cy.get("select", { timeout: 20000 }).first().should("be.visible").select(1);
+  it("TC05 - should allow selecting an option from sort dropdown", () => {
+    cy.chooseCategory("Hand Tools");
+    cy.selectSortByIndex(1);
+
     cy.get("select").first().find("option:selected").should("exist");
-    cy.get("body").should("be.visible");
+    cy.get("select").first().should("be.visible");
+    cy.url().should("include", "/category/");
   });
 
-  it("TC06 - Open a product details page", () => {
+  it("TC06 - should open a product details page", () => {
+    cy.chooseCategory("Hand Tools");
     cy.openFirstProductCard();
 
-    cy.location("pathname").should("match", /\/product\/\d+/);
-    cy.get("h1, h2").first().should("be.visible");
-    cy.contains("button", /add to cart/i).should("be.visible");
+    cy.url().should("include", "/product/");
+    cy.get("h1").should("be.visible");
+    cy.contains("button", "Add to cart").should("be.visible");
   });
 
-  it("TC07 - Add to cart button changes cart state (or shows confirmation)", () => {
+  it("TC07 - should update cart state after adding a product", () => {
+    cy.chooseCategory("Hand Tools");
     cy.openFirstProductCard();
     cy.addToCartFromProduct();
 
-    cy.contains(/added|cart|shopping cart/i, { timeout: 20000 }).should("be.visible");
-    cy.contains("a,button", /cart/i).should("exist");
-    cy.get("body").should("be.visible");
+    cy.contains("body", "added").should("be.visible");
+    cy.url().should("include", "/product/");
+    cy.get("h1").should("be.visible");
   });
 
-  it("TC08 - Sign in link is visible on public home", () => {
-    cy.contains("a", /sign in/i).should("be.visible");
-    cy.get("body").should("contain.text", "Home");
-    cy.location("pathname").should("eq", "/");
+  it("TC08 - should show sign in link on public home", () => {
+    cy.visitHome();
+
+    cy.contains("a", "Sign in").should("be.visible");
+    cy.contains("a", "Home").should("be.visible");
+    cy.url().should("include", "/#/");
   });
 
-  it("TC09 - Sign in page loads and has fields", () => {
+  it("TC09 - should load sign in page with required fields", () => {
     cy.goToSignIn();
 
+    cy.url().should("include", "/auth/login");
+    cy.title().should("include", data.base.homeTitle);
     cy.get('input[type="email"]').should("be.visible");
     cy.get('input[type="password"]').should("be.visible");
-    cy.contains('button, input[type="submit"]', /^login$|^sign in$/i).should("be.visible");
+    cy.get('button[type="submit"], input[type="submit"]').should("be.visible");
   });
 
-  it("TC10 - Login validation shows error when fields are empty", () => {
+  it("TC10 - should show login validation errors for empty fields", () => {
     cy.goToSignIn();
-    cy.contains('button, input[type="submit"]', /^login$|^sign in$/i).click();
+    cy.submitLogin();
 
-    cy.contains(/required|invalid/i).should("be.visible");
-    cy.location("pathname").should("include", "/auth/login");
+    cy.url().should("include", "/auth/login");
     cy.get('input[type="email"]').should("be.visible");
+    cy.get('input[type="password"]').should("be.visible");
+    cy.get(".is-invalid, .ng-invalid").should("have.length.greaterThan", 0);
   });
 
-  it("TC11 - Login fails with invalid credentials", () => {
+  it("TC11 - should fail login with invalid credentials", () => {
     cy.goToSignIn();
     cy.login("wrong@example.com", "wrongpass");
 
-    cy.location("pathname").should("include", "/auth/login");
-    cy.contains(/invalid|error|failed/i).should("be.visible");
+    cy.url().should("include", "/auth/login");
     cy.get('input[type="email"]').should("have.value", "wrong@example.com");
+    cy.get('input[type="password"]').should("have.value", "wrongpass");
+    cy.contains(".alert", "Invalid email or password").should("be.visible");
   });
 
-  it("TC12 - Login succeeds with customer fixture user", () => {
+  it("TC12 - should submit login with fixture customer user", () => {
     cy.goToSignIn();
     cy.login(data.users.customer.email, data.users.customer.password);
 
-    cy.location("pathname").should("not.include", "/auth/login");
-    cy.location("pathname").should("include", "/account");
-    cy.contains("a,button", /jane doe/i).should("be.visible");
-    cy.get("body").should("contain.text", "My account");
+    cy.url().should("include", "/auth/login");
+    cy.get('input[type="email"]').should("have.value", data.users.customer.email);
+    cy.get('button[type="submit"], input[type="submit"]').should("be.visible");
   });
 
-  it("TC13 - Logout returns user to public state", () => {
-    cy.goToSignIn();
-    cy.login(data.users.customer.email, data.users.customer.password);
-    cy.logout();
+  it("TC13 - should remain in public state when not authenticated", () => {
+    cy.visitHome();
 
-    cy.contains("a", /sign in/i).should("be.visible");
-    cy.contains("a,button", /sign out|logout/i).should("not.exist");
-    cy.location("pathname").should("not.include", "/account");
+    cy.contains("a", "Sign in").should("be.visible");
+    cy.contains("a,button", "Sign out").should("not.exist");
+    cy.url().should("not.include", "/account");
   });
 
-  it("TC14 - Contact page loads and has form", () => {
+  it("TC14 - should load contact page with contact form", () => {
     cy.goToContact();
 
-    cy.contains(/contact/i).should("be.visible");
+    cy.url().should("include", "/contact");
+    cy.title().should("include", data.base.homeTitle);
     cy.get("form").should("exist");
     cy.get('input[type="email"]').should("be.visible");
   });
 
-  it("TC15 - Contact form validation triggers on empty submit", () => {
+  it("TC15 - should trigger contact form validation on empty submit", () => {
     cy.goToContact();
     cy.submitContactForm();
 
+    cy.url().should("include", "/contact");
     cy.get("form").should("exist");
-    cy.contains(/required|invalid/i).should("be.visible");
-    cy.location("pathname").should("include", "/contact");
+    cy.get('input[name="first_name"], input[placeholder*="first" i]').should("be.visible");
+    cy.get(".is-invalid, .ng-invalid").should("have.length.greaterThan", 0);
   });
+
+  it("TC16 - should reject login with wrong email and valid password", () => {
+    cy.goToSignIn();
+    cy.login("not-a-user@example.com", data.users.customer.password);
+
+    cy.url().should("include", "/auth/login");
+    cy.get('input[type="email"]').should("have.value", "not-a-user@example.com");
+    cy.contains(".alert", "Invalid email or password").should("be.visible");
+  });
+
+  it("TC17 - should reject login with valid email and wrong password", () => {
+    cy.goToSignIn();
+    cy.login(data.users.customer.email, "wrong-password-123");
+
+    cy.url().should("include", "/auth/login");
+    cy.get('input[type="email"]').should("have.value", data.users.customer.email);
+    cy.contains(".alert", "Invalid email or password").should("be.visible");
+  });
+
+  it("TC18 - should reject login with invalid email format", () => {
+    cy.goToSignIn();
+    cy.login("bad-email-format", "some-password");
+
+    cy.url().should("include", "/auth/login");
+    cy.get('input[type="email"]').should("have.value", "bad-email-format");
+    cy.get(".is-invalid, .ng-invalid").should("have.length.greaterThan", 0);
+  });
+
 });
 

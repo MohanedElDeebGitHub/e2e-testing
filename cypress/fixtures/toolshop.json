@@ -4,9 +4,9 @@
   },
   "users": {
     "customer": {
-      "email": "customer@practicesoftwaretesting.com",
-      "password": "welcome01",
-      "displayName": "Jane Doe"
+      "email": "tester@gmail.com",
+      "password": "Password!1__",
+      "displayName": "test user"
     },
     "admin": {
       "email": "admin@practicesoftwaretesting.com",
@@ -19,11 +19,11 @@
     "invalidTerm": "zzzzzz-not-a-real-product"
   },
   "contact": {
-    "firstName": "Omar",
+    "firstName": "mohaned",
     "lastName": "Tester",
-    "email": "omar.tester@example.com",
-    "subject": "Order question",
-    "message": "Hello! This is an automated Cypress test message."
+    "email": "mohaned.tester@example.com",
+    "subject": "test subject",
+    "message": "test message."
   }
 }
 
