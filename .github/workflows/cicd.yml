@@ -21,19 +21,23 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 18.18.0
 
       # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Step 4: Run Cypress tests
+      # Step 4: Verify Cypress binary
+      - name: Verify Cypress installation
+        run: npx cypress verify
+
+      # Step 5: Run Cypress tests in headless mode
       - name: Run Cypress tests
-        run: npx cypress run
+        run: npx cypress run --headless --browser chrome
         env:
-          CYPRESS_BASE_URL: https://your-remote-site-url.com
+          CYPRESS_BASE_URL: https://practicesoftwaretesting.com
 
-      # Step 5: Archive test results and screenshots
+      # Step 6: Archive test results and screenshots
       - name: Archive test results
         if: failure()
         uses: actions/upload-artifact@v4
@@ -41,7 +45,7 @@ jobs:
           name: cypress-results
           path: cypress/screenshots/
 
-      # Step 6: Notify on failure (optional)
+      # Step 7: Notify on failure (optional)
       - name: Notify failure
         if: failure()
         run: echo "Tests failed. Please check the logs and screenshots."
