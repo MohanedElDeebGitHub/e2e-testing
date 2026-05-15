@@ -1,6 +1,6 @@
 // Open homepage
 Cypress.Commands.add("visitHome", () => {
-  cy.visit("/#/");
+  cy.safeVisit("/#/");
   cy.url().should("include", "/#/");
 });
 

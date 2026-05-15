@@ -1,7 +1,7 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 
 Given("I visit the file upload contact page", () => {
-  cy.visit("/contact");
+  cy.safeVisit("/contact");
 });
 
 When("I upload file1.docx", () => {

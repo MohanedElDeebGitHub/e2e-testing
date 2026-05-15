@@ -1,8 +1,26 @@
 // File Upload Tests - Simple cypress-file-upload plugin examples using actual website elements
 describe("File Upload: e2e", () => {
+  /**
+   * CI-safe visit helper: retries the page load if the server returns 403.
+   * GitHub Actions IPs are sometimes blocked by practice sites. Using
+   * failOnStatusCode: false + manual retry prevents false test failures.
+   */
+  const visitContact = () => {
+    cy.visit("/contact", {
+      failOnStatusCode: false,
+      timeout: 60000,
+    });
+    // If the page returned 403, wait and reload once before continuing
+    cy.document().then((doc) => {
+      if (doc.title === "" || doc.body.innerText.includes("403")) {
+        cy.wait(3000);
+        cy.reload();
+      }
+    });
+  };
+
   beforeEach(() => {
-    // Visit the contact page which has a real file input
-    cy.visit("/contact");
+    visitContact();
   });
 
   // TEST 1: Upload a single file from fixtures

@@ -25,16 +25,38 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install polyfills (CI fix for crypto/esbuild issue)
-        run: npm install -D crypto-browserify
-
       - name: Verify Cypress
         run: npx cypress verify
 
+      - name: Pre-run connectivity check
+        # Retry up to 5 times with 15s gaps before starting Cypress.
+        # practicesoftwaretesting.com rate-limits CI IPs; a brief warm-up
+        # gives the site time to serve our runner after the initial block.
+        run: |
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+              -H "Accept-Language: en-US,en;q=0.9" \
+              -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+              --max-time 15 \
+              https://practicesoftwaretesting.com/)
+            echo "Attempt $i — HTTP $STATUS"
+            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 301 ] || [ "$STATUS" -eq 302 ]; then
+              echo "Site is reachable. Proceeding."
+              break
+            fi
+            echo "Got $STATUS, waiting 15s before retry..."
+            sleep 15
+          done
+
       - name: Run Cypress tests
-        run: NODE_OPTIONS=--openssl-legacy-provider npm run cy:run:chrome
+        run: npm run cy:run:chrome
         env:
-          CYPRESS_userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          # Pass realistic browser headers so the site treats the runner as a real user
+          CYPRESS_userAgent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          # Cypress retries are already configured in cypress.config.ts (runMode: 2)
+          # but this env var ensures it's respected even if config is cached
+          CYPRESS_RETRIES: "2"
 
       - name: Archive screenshots
         if: failure()
