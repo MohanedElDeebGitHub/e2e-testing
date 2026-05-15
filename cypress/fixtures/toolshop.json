@@ -16,6 +16,7 @@
   },
   "search": {
     "validTerm": "hammer",
+    "validTerm2": "pliers",
     "invalidTerm": "zzzzzz-not-a-real-product"
   },
   "contact": {
@@ -24,6 +25,16 @@
     "email": "mohaned.tester@example.com",
     "subject": "test subject",
     "message": "test message."
+  },
+  "products": {
+    "sortOptions": {
+      "nameAscending": 0,
+      "nameDescending": 1,
+      "priceAscending": 2,
+      "priceDescending": 3
+    },
+    "minPrice": 5,
+    "maxPrice": 50
   }
 }
 
