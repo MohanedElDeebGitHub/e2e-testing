@@ -13,14 +13,14 @@
   },
   "devDependencies": {
     "@bahmutov/cypress-esbuild-preprocessor": "^2.2.8",
-    "cypress": "^15.12.0",
+    "cypress": "^15.15.0",
     "ts-loader": "^9.5.7"
   },
   "dependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^24.0.1",
     "cypress-file-upload": "^5.0.8"
   },
-  "cypress-cucumber-preprocessor":{
+  "cypress-cucumber-preprocessor": {
     "stepDefinitions": "cypress/support/step_definitions/**/*.js"
   }
 }

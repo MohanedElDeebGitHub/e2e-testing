@@ -17,9 +17,9 @@ When("I upload file2.txt", () => {
 });
 
 Then("the file should be uploaded successfully", () => {
-  cy.get('input[type="file"]').should("have.value").and("include", "C:\\fakepath\\");
+  cy.get('input[type="file"]').invoke("val").should("include", "C:\\fakepath\\");
 });
 
 Then("the files should be uploaded successfully", () => {
-  cy.get('input[type="file"]').should("have.value").and("include", "C:\\fakepath\\");
+  cy.get('input[type="file"]').invoke("val").should("include", "C:\\fakepath\\");
 });
