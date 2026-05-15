@@ -1,0 +1,47 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Run Cypress tests
+      - name: Run Cypress tests
+        run: npx cypress run
+        env:
+          CYPRESS_BASE_URL: https://your-remote-site-url.com
+
+      # Step 5: Archive test results and screenshots
+      - name: Archive test results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-results
+          path: cypress/screenshots/
+
+      # Step 6: Notify on failure (optional)
+      - name: Notify failure
+        if: failure()
+        run: echo "Tests failed. Please check the logs and screenshots."
