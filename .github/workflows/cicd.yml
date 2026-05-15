@@ -13,35 +13,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: npm
 
-      # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Step 4: Run Cypress tests
+      - name: Install polyfills (CI fix for crypto/esbuild issue)
+        run: npm install -D crypto-browserify
+
+      - name: Verify Cypress
+        run: npx cypress verify
+
       - name: Run Cypress tests
-        run: npx cypress run
-        env:
-          CYPRESS_BASE_URL: https://your-remote-site-url.com
+        run: NODE_OPTIONS=--openssl-legacy-provider npm run cy:run:chrome
 
-      # Step 5: Archive test results and screenshots
-      - name: Archive test results
+      - name: Archive screenshots
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: cypress-results
+          name: cypress-screenshots
           path: cypress/screenshots/
 
-      # Step 6: Notify on failure (optional)
-      - name: Notify failure
+      - name: Archive videos
         if: failure()
-        run: echo "Tests failed. Please check the logs and screenshots."
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: cypress/videos/
