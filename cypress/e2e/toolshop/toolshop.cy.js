@@ -1,6 +1,9 @@
 describe("Toolshop: e2e", () => {
   let data;
 
+  // Import all POM classes
+  const { HomePage, CategoryPage, ProductPage, LoginPage, ContactPage, SearchPage } = require("../../support/POM/index");
+
   before(() => {
     cy.fixture("toolshop").then((d) => {
       data = d;
@@ -8,168 +11,140 @@ describe("Toolshop: e2e", () => {
   });
 
   beforeEach(function () {
-    cy.visitHome();
+    HomePage.visitHome();
   });
 
   it("TC01 - should load the home page", () => {
-    cy.visitHome();
-
-    cy.url().should("include", "/#/");
-    cy.title().should("include", data.base.homeTitle);
-    cy.contains("a", "Home").should("be.visible");
+    HomePage.visitHome();
+    HomePage.verifyHomeUrl();
+    HomePage.verifyHomeTitle(data.base.homeTitle);
+    HomePage.verifyHomeLinks();
   });
 
   it("TC02 - should display the main navbar links", () => {
-    cy.visitHome();
-
-    cy.get("a").should("exist");
-    cy.contains("a", "Home").should("be.visible");
-    cy.contains("a", "Contact").should("be.visible");
+    HomePage.visitHome();
+    HomePage.verifyLinksExist();
+    HomePage.verifyHomeLinks();
   });
 
   it("TC03 - should open the categories menu", () => {
-    cy.openCategoriesMenu();
-
+    CategoryPage.openCategoriesMenu();
     cy.url().should("include", "practicesoftwaretesting.com");
-    cy.contains("a,button", "Power Tools").should("be.visible");
-    cy.contains("a,button", "Hand Tools").should("be.visible");
+    CategoryPage.verifyCategoriesMenuVisible();
   });
 
   it("TC04 - should navigate to a category from the menu", () => {
-    cy.chooseCategory("Hand Tools");
-
-    cy.url().should("include", "/category/");
-    cy.url().should("include", "hand-tools");
-    cy.get('a[href*="/product/"]').should("have.length.greaterThan", 0);
+    CategoryPage.selectCategory("Hand Tools");
+    CategoryPage.verifyCategoryUrl("hand-tools");
+    CategoryPage.verifyProductsDisplayed();
   });
 
   it("TC05 - should allow selecting an option from sort dropdown", () => {
-    cy.chooseCategory("Hand Tools");
-    cy.selectSortByIndex(1);
-
-    cy.get("select").first().find("option:selected").should("exist");
-    cy.get("select").first().should("be.visible");
+    CategoryPage.selectCategory("Hand Tools");
+    CategoryPage.sortBy(1);
+    CategoryPage.verifySortDropdownSelected();
     cy.url().should("include", "/category/");
   });
 
   it("TC06 - should open a product details page", () => {
-    cy.chooseCategory("Hand Tools");
-    cy.openFirstProductCard();
-
-    cy.url().should("include", "/product/");
-    cy.get("h1").should("be.visible");
-    cy.contains("button", "Add to cart").should("be.visible");
+    CategoryPage.selectCategory("Hand Tools");
+    CategoryPage.openFirstProduct();
+    ProductPage.verifyProductUrl();
+    ProductPage.verifyProductTitle();
+    ProductPage.verifyAddToCartButton();
   });
 
   it("TC07 - should update cart state after adding a product", () => {
-    cy.chooseCategory("Hand Tools");
-    cy.openFirstProductCard();
-    cy.addToCartFromProduct();
-
-    cy.contains("body", "added").should("be.visible");
-    cy.url().should("include", "/product/");
-    cy.get("h1").should("be.visible");
+    CategoryPage.selectCategory("Hand Tools");
+    CategoryPage.openFirstProduct();
+    ProductPage.addToCart();
+    ProductPage.verifyAddToCartSuccess();
+    ProductPage.verifyProductUrl();
+    ProductPage.verifyProductDetailsVisible();
   });
 
   it("TC08 - should show sign in link on public home", () => {
-    cy.visitHome();
-
-    cy.contains("a", "Sign in").should("be.visible");
-    cy.contains("a", "Home").should("be.visible");
-    cy.url().should("include", "/#/");
+    HomePage.visitHome();
+    HomePage.verifySignInLink();
+    HomePage.verifyHomeLinks();
+    HomePage.verifyHomeUrl();
   });
 
   it("TC09 - should load sign in page with required fields", () => {
-    cy.goToSignIn();
-
-    cy.url().should("include", "/auth/login");
+    LoginPage.navigateToSignIn();
+    LoginPage.verifyLoginPageUrl();
     cy.title().should("include", data.base.homeTitle);
-    cy.get('input[type="email"]').should("be.visible");
-    cy.get('input[type="password"]').should("be.visible");
-    cy.get('button[type="submit"], input[type="submit"]').should("be.visible");
+    LoginPage.verifyLoginFormVisible();
   });
 
   it("TC10 - should show login validation errors for empty fields", () => {
-    cy.goToSignIn();
-    cy.submitLogin();
-
-    cy.url().should("include", "/auth/login");
-    cy.get('input[type="email"]').should("be.visible");
-    cy.get('input[type="password"]').should("be.visible");
-    cy.get(".is-invalid, .ng-invalid").should("have.length.greaterThan", 0);
+    LoginPage.navigateToSignIn();
+    LoginPage.submitLogin();
+    LoginPage.verifyLoginPageUrl();
+    LoginPage.verifyLoginFormVisible();
+    LoginPage.verifyValidationErrors();
   });
 
   it("TC11 - should fail login with invalid credentials", () => {
-    cy.goToSignIn();
-    cy.login("wrong@example.com", "wrongpass");
-
-    cy.url().should("include", "/auth/login");
-    cy.get('input[type="email"]').should("have.value", "wrong@example.com");
-    cy.get('input[type="password"]').should("have.value", "wrongpass");
-    cy.contains(".alert", "Invalid email or password").should("be.visible");
+    LoginPage.navigateToSignIn();
+    LoginPage.login("wrong@example.com", "wrongpass");
+    LoginPage.verifyLoginPageUrl();
+    LoginPage.verifyEmailFieldValue("wrong@example.com");
+    LoginPage.verifyPasswordFieldValue("wrongpass");
+    LoginPage.verifyLoginError();
   });
 
   it("TC12 - should submit login with fixture customer user", () => {
-    cy.goToSignIn();
-    cy.login(data.users.customer.email, data.users.customer.password);
-
-    cy.url().should("include", "/auth/login");
-    cy.get('input[type="email"]').should("have.value", data.users.customer.email);
+    LoginPage.navigateToSignIn();
+    LoginPage.login(data.users.customer.email, data.users.customer.password);
+    LoginPage.verifyLoginPageUrl();
+    LoginPage.verifyEmailFieldValue(data.users.customer.email);
     cy.get('button[type="submit"], input[type="submit"]').should("be.visible");
   });
 
   it("TC13 - should remain in public state when not authenticated", () => {
-    cy.visitHome();
-
-    cy.contains("a", "Sign in").should("be.visible");
+    HomePage.visitHome();
+    HomePage.verifySignInLink();
     cy.contains("a,button", "Sign out").should("not.exist");
     cy.url().should("not.include", "/account");
   });
 
   it("TC14 - should load contact page with contact form", () => {
-    cy.goToContact();
-
-    cy.url().should("include", "/contact");
+    ContactPage.navigateToContact();
+    ContactPage.verifyContactPageUrl();
     cy.title().should("include", data.base.homeTitle);
-    cy.get("form").should("exist");
-    cy.get('input[type="email"]').should("be.visible");
+    ContactPage.verifyContactFormVisible();
   });
 
   it("TC15 - should trigger contact form validation on empty submit", () => {
-    cy.goToContact();
-    cy.submitContactForm();
-
-    cy.url().should("include", "/contact");
-    cy.get("form").should("exist");
-    cy.get('input[name="first_name"], input[placeholder*="first" i]').should("be.visible");
-    cy.get(".is-invalid, .ng-invalid").should("have.length.greaterThan", 0);
+    ContactPage.navigateToContact();
+    ContactPage.submitContactForm();
+    ContactPage.verifyContactPageUrl();
+    ContactPage.verifyContactFormValidationErrors();
   });
 
   it("TC16 - should reject login with wrong email and valid password", () => {
-    cy.goToSignIn();
-    cy.login("not-a-user@example.com", data.users.customer.password);
-
-    cy.url().should("include", "/auth/login");
-    cy.get('input[type="email"]').should("have.value", "not-a-user@example.com");
-    cy.contains(".alert", "Invalid email or password").should("be.visible");
+    LoginPage.navigateToSignIn();
+    LoginPage.login("not-a-user@example.com", data.users.customer.password);
+    LoginPage.verifyLoginPageUrl();
+    LoginPage.verifyEmailFieldValue("not-a-user@example.com");
+    LoginPage.verifyLoginError();
   });
 
   it("TC17 - should reject login with valid email and wrong password", () => {
-    cy.goToSignIn();
-    cy.login(data.users.customer.email, "wrong-password-123");
-
-    cy.url().should("include", "/auth/login");
-    cy.get('input[type="email"]').should("have.value", data.users.customer.email);
-    cy.contains(".alert", "Invalid email or password").should("be.visible");
+    LoginPage.navigateToSignIn();
+    LoginPage.login(data.users.customer.email, "wrong-password-123");
+    LoginPage.verifyLoginPageUrl();
+    LoginPage.verifyEmailFieldValue(data.users.customer.email);
+    LoginPage.verifyLoginError();
   });
 
   it("TC18 - should reject login with invalid email format", () => {
-    cy.goToSignIn();
-    cy.login("bad-email-format", "some-password");
-
-    cy.url().should("include", "/auth/login");
-    cy.get('input[type="email"]').should("have.value", "bad-email-format");
-    cy.get(".is-invalid, .ng-invalid").should("have.length.greaterThan", 0);
+    LoginPage.navigateToSignIn();
+    LoginPage.login("bad-email-format", "some-password");
+    LoginPage.verifyLoginPageUrl();
+    LoginPage.verifyEmailFieldValue("bad-email-format");
+    LoginPage.verifyValidationErrors();
   });
 
   // ============================================
@@ -178,78 +153,54 @@ describe("Toolshop: e2e", () => {
 
   // TEST 1: Search for a valid product by term
   it("TC19 - should search for valid product successfully", () => {
-    // Load home page (already done in beforeEach)
-    cy.searchProducts(data.search.validTerm); // Type "hammer" in search
-    cy.submitSearch(); // Submit the search
-
-    // Verify we're on a search results page
+    SearchPage.searchForProduct(data.search.validTerm);
+    SearchPage.submitSearch();
     cy.url().should("include", "/");
-    // Verify at least one product appears
-    cy.get('a[href*="/product/"]').should("have.length.greaterThan", 0);
+    SearchPage.verifySearchResultsExist();
   });
 
   // TEST 2: Search for non-existent product shows no results
   it("TC20 - should display empty results for invalid search", () => {
-    cy.searchProducts(data.search.invalidTerm); // Search for something that doesn't exist
-    cy.submitSearch();
-
-    // Verify we get no product links, indicating no results
-    cy.get('a[href*="/product/"]').should("have.length", 0);
+    SearchPage.searchForProduct(data.search.invalidTerm);
+    SearchPage.submitSearch();
+    SearchPage.verifyNoResults();
   });
 
   // TEST 3: Display product details when clicking a product card
   it("TC21 - should view product details from home listing", () => {
-    // Click the first product from the home page
-    cy.get('a[href*="/product/"]').first().should("be.visible").click();
-
-    // Verify we're on product detail page
-    cy.url().should("include", "/product/");
-    // Verify product name and price are visible
-    cy.get("h1").should("be.visible");
-    cy.contains("button", "Add to cart").should("be.visible");
+    CategoryPage.openFirstProduct();
+    ProductPage.verifyProductUrl();
+    ProductPage.verifyProductTitle();
+    ProductPage.verifyAddToCartButton();
   });
 
   // TEST 4: Add product to cart and see success message
   it("TC22 - should add product to cart from home list", () => {
-    // Click first product
-    cy.get('a[href*="/product/"]').first().should("be.visible").click();
-    // Add it to cart
-    cy.addToCartFromProduct();
-
-    // Verify success feedback appears (optional)
-    cy.contains("body", "added").should("be.visible");
-    cy.url().should("include", "/product/");
+    CategoryPage.openFirstProduct();
+    ProductPage.addToCart();
+    ProductPage.verifyAddToCartSuccess();
+    ProductPage.verifyProductUrl();
   });
 
   // TEST 5: Sort products by different options
   it("TC23 - should sort products by price ascending", () => {
-    // Verify sort dropdown exists and is accessible
     cy.get("select").first().should("be.visible");
-    // Select sort option (index 2 = price ascending based on fixture)
-    cy.selectSortByIndex(data.products.sortOptions.priceAscending);
-
-    // Verify products are still displayed after sorting
-    cy.get('a[href*="/product/"]').should("have.length.greaterThan", 0);
+    CategoryPage.sortBy(data.products.sortOptions.priceAscending);
+    CategoryPage.verifyProductsDisplayed();
   });
 
   // TEST 6: Search and verify multiple results appear
   it("TC24 - should display multiple search results", () => {
-    cy.searchProducts(data.search.validTerm2); // Search for "pliers"
-    cy.submitSearch();
-
-    // Verify multiple products appear (at least 2)
-    cy.get('a[href*="/product/"]').should("have.length.greaterThan", 1);
+    SearchPage.searchForProduct(data.search.validTerm2);
+    SearchPage.submitSearch();
+    SearchPage.verifyMultipleResultsExist();
   });
 
   // TEST 7: Verify product card contains price information
   it("TC25 - should display product price on listing", () => {
-    // Verify price elements are visible on home page product cards
     cy.get('a[href*="/product/"]').first().within(() => {
-      // Product price should be visible in the card
       cy.get("h5, h4, span, p").should("have.length.greaterThan", 0);
     });
-
-    // Also verify general price elements on page
     cy.contains("$").should("be.visible");
   });
 
