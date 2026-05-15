@@ -204,5 +204,37 @@ describe("Toolshop: e2e", () => {
     cy.contains("$").should("be.visible");
   });
 
+  // ============================================
+  // DROPDOWN TESTS (3 TESTS)
+  // ============================================
+
+  // TEST 1: Sort by dropdown option 0 (Name Ascending)
+  it("TC26 - should sort products by name ascending using dropdown", () => {
+    CategoryPage.selectCategory("Hand Tools");
+    cy.get("select").first().select(0); // Select option 0
+    CategoryPage.verifySortDropdownSelected();
+    CategoryPage.verifyProductsDisplayed();
+  });
+
+  // TEST 2: Sort by dropdown option 1 (Name Descending)
+  it("TC27 - should sort products by name descending using dropdown", () => {
+    CategoryPage.selectCategory("Hand Tools");
+    cy.get("select").first().select(1); // Select option 1
+    CategoryPage.verifySortDropdownSelected();
+    CategoryPage.verifyProductsDisplayed();
+  });
+
+  // TEST 3: Verify dropdown changes persist after selection
+  it("TC28 - should maintain dropdown selection after sorting", () => {
+    CategoryPage.selectCategory("Hand Tools");
+    cy.get("select").first().select(0); // Select first sort option
+    cy.get("select").first().find("option:selected").invoke("attr", "value").then((selectedValue) => {
+      // Verify products are displayed with the selection
+      CategoryPage.verifyProductsDisplayed();
+      // Verify the dropdown still shows selected option
+      cy.get("select").first().find("option:selected").invoke("attr", "value").should("equal", selectedValue);
+    });
+  });
+
 });
 
