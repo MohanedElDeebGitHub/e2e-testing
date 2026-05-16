@@ -14,3 +14,21 @@
 // ***********************************************************
 
 import './commands'
+
+/**
+ * Override navigator.webdriver before every test.
+ *
+ * Cloudflare's bot-detection script checks `navigator.webdriver === true`
+ * to identify automation. When it's true (the default in headless Chrome),
+ * Cloudflare serves a JS challenge page instead of the real Angular app,
+ * so `input[type="file"]` and other elements are never rendered in CI.
+ *
+ * Setting it to `undefined` makes the browser fingerprint match a real user,
+ * allowing the Angular SPA to fully mount before tests run.
+ */
+Cypress.on('window:before:load', (win) => {
+  Object.defineProperty(win.navigator, 'webdriver', {
+    get: () => undefined,
+    configurable: true,
+  });
+});

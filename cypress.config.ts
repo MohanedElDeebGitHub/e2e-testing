@@ -35,6 +35,36 @@ export default defineConfig({
         })
       );
 
+      /**
+       * Defeat Cloudflare/bot-detection in headless CI.
+       *
+       * practicesoftwaretesting.com uses Cloudflare which fingerprints the
+       * browser. Headless Chrome exposes navigator.webdriver=true and several
+       * other automation signals that cause Cloudflare to serve an empty JS
+       * challenge page instead of the real Angular app.
+       *
+       * These Chrome flags suppress those signals so the app fully renders.
+       */
+      on("before:browser:launch", (browser, launchOptions) => {
+        if (browser.name === "chrome" || browser.name === "chromium") {
+          // Mask the automation/headless fingerprint
+          launchOptions.args.push("--disable-blink-features=AutomationControlled");
+          launchOptions.args.push("--disable-web-security");
+          launchOptions.args.push("--no-sandbox");
+          launchOptions.args.push("--disable-dev-shm-usage");
+          // Make headless mode indistinguishable from headed
+          launchOptions.args.push("--headless=new");
+          // Disable automation info bar
+          launchOptions.args.push("--disable-infobars");
+          // Set a realistic window size
+          launchOptions.args.push("--window-size=1280,800");
+          // Remove the "Chrome is being controlled by automated software" banner
+          const idx = launchOptions.args.indexOf("--enable-automation");
+          if (idx !== -1) launchOptions.args.splice(idx, 1);
+        }
+        return launchOptions;
+      });
+
       // Make sure to return the config object as it might have been modified by the plugin.
       return config;
     },
